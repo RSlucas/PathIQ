@@ -1,16 +1,90 @@
-# React + Vite
+# RouteIQ
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+RouteIQ is a route planning application built with React and Leaflet.  
+It allows users to select two points on a map and visualize routes with real-time distance and estimated travel time.
 
-Currently, two official plugins are available:
+The goal of the project is to provide a simple, interactive way to understand routes in terms of distance, duration, and transport mode.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Interactive map using Leaflet
+- Select origin and destination by clicking on the map
+- Route calculation using OpenStreetMap routing API (OSRM)
+- Displays:
+  - Distance (meters / kilometers)
+  - Estimated travel time
+- Support for multiple transport modes:
+  - Driving
+  - Walking
+  - Cycling
+- Dynamic route updates when changing mode or points
+- Clean sidebar UI for route information
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Tech Stack
+
+- React
+- Vite
+- Leaflet / React-Leaflet
+- OpenStreetMap tiles
+- OSRM Routing API
+
+---
+
+## How it works
+
+1. User selects a point as origin
+2. User selects a destination point
+3. Application sends coordinates to routing API
+4. API returns route geometry + metadata
+5. Route is rendered on the map
+6. Distance and time are displayed in sidebar
+
+---
+
+## Project Structure
+
+```txt
+src/
+├── components/
+│   └── MapView.jsx
+├── App.jsx
+├── main.jsx
+└── index.css
+```
+
+
+---
+
+## Future improvements
+
+- Elevation-based route difficulty scoring
+- Current location (GPS) support
+- Route comparison between modes
+- Heatmap for elevation gain
+- Better mobile layout
+
+---
+
+## Notes
+
+This project was built for learning and portfolio purposes.
+
+The idea of route planning with maps, distance calculation, and routing APIs is a common problem domain and may exist in other applications with similar concepts.
+
+RouteIQ is an independent implementation focused on learning geospatial APIs, frontend state management, and interactive UI design.
+
+---
+
+## Screenshots
+
+*(screenshots here when available)*
+
+---
+
+## License
+
+MIT License
