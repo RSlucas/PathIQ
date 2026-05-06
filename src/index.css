@@ -3,10 +3,12 @@
   --surface: #1a1d27;
   --surface-2: #22263a;
   --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.12);
   --text-primary: #f0f0f0;
   --text-secondary: #7a7f9a;
   --accent: #4f8eff;
   --accent-dim: rgba(79, 142, 255, 0.12);
+  --accent-border: rgba(79, 142, 255, 0.35);
   --radius: 10px;
   --font: 'Inter', system-ui, sans-serif;
 }
@@ -27,6 +29,7 @@ html, body, #root {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Layout */
 .app-layout {
   display: flex;
   height: 100vh;
@@ -34,6 +37,7 @@ html, body, #root {
   overflow: hidden;
 }
 
+/* Sidebar */
 .sidebar {
   width: 350px;
   min-width: 280px;
@@ -41,7 +45,6 @@ html, body, #root {
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  gap: 0;
   overflow-y: auto;
 }
 
@@ -86,14 +89,38 @@ html, body, #root {
   border-bottom: 1px solid var(--border);
 }
 
+/* Points */
+.point-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.point-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.point-connector {
+  width: 2px;
+  height: 12px;
+  background: var(--border-strong);
+  margin-left: 6px;
+}
+
+.point-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
 .point-label {
-  display: block;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   color: var(--text-secondary);
-  margin-bottom: 6px;
 }
 
 .point-display {
@@ -107,20 +134,74 @@ html, body, #root {
   min-height: 40px;
   display: flex;
   align-items: center;
+  transition: border-color 0.2s, background 0.2s;
 }
 
 .point-display.set {
   color: var(--accent);
-  border-color: rgba(79, 142, 255, 0.3);
+  border-color: var(--accent-border);
   background: var(--accent-dim);
 }
 
-.hint-text {
-  font-size: 12px;
+.set-btn {
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
   color: var(--text-secondary);
-  line-height: 1.6;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
 }
 
+.set-btn:hover {
+  border-color: var(--accent-border);
+  color: var(--text-primary);
+}
+
+.set-btn.active {
+  border-color: var(--accent-border);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+/* Mode tabs */
+.mode-tabs {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.mode-tab {
+  flex: 1;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 0;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.mode-tab:hover {
+  border-color: var(--accent-border);
+  color: var(--text-primary);
+}
+
+.mode-tab.active {
+  border-color: var(--accent-border);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+/* Stats */
 .route-stats {
   display: flex;
   align-items: center;
@@ -150,10 +231,17 @@ html, body, #root {
 .stat-divider {
   width: 1px;
   height: 40px;
-  background: var(--border);
+  background: var(--border-strong);
   margin: 0 20px;
 }
 
+.hint-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* Map */
 .map-area {
   flex: 1;
   position: relative;
