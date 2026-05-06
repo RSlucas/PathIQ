@@ -22,7 +22,66 @@ function estimateDuration(distance, mode) {
   return (km / speed[mode]) * 3600;
 }
 
-async function fetchElevation(coords) {
+// 🌍 cache (anti spam)
+const geoCache = new Map();
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function fetchPlaceName([lat, lng]) {
+  const key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+
+  if (geoCache.has(key)) return geoCache.get(key);
+
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+      {
+        headers: {
+          "User-Agent": "RouteIQ-App",
+        },
+      }
+    );
+
+    const data = await res.json();
+
+    const name =
+      data.address?.city ||
+      data.address?.town ||
+      data.address?.village ||
+      data.address?.county ||
+      data.display_name?.split(",")[0] ||
+      "Unknown";
+
+    geoCache.set(key, name);
+    return name;
+  } catch {
+    return "Unknown";
+  }
+}
+
+export default function MapView({
+  points,
+  setPoints,
+  onRouteData,
+  mode,
+  activePoint,
+  setActivePoint,
+  onPlaceNames,
+}) {
+  const [routeCoords, setRouteCoords] = useState([]);
+  const [placeNames, setPlaceNames] = useState([null, null]);
+
+  function handleMapClick(newPoint) {
+    setPoints((prev) => {
+      const next = [...prev];
+
+      if (activePoint === "origin") next[0] = newPoint;
+      else next[1] = newPoint;
+
+      return next;
+    });
+  }
+
+  async function fetchElevation(coords) {
   const locations = coords.map(([lat, lng]) => ({
     latitude: lat,
     longitude: lng,
@@ -40,7 +99,7 @@ async function fetchElevation(coords) {
   return data.results.map((r) => r.elevation);
 }
 
-function calculateElevationStats(elevations) {
+  function calculateElevationStats(elevations) {
   let ascent = 0;
   let descent = 0;
 
@@ -56,31 +115,7 @@ function calculateElevationStats(elevations) {
   };
 }
 
-export default function MapView({
-  points,
-  setPoints,
-  onRouteData,
-  mode,
-  activePoint,
-  setActivePoint,
-}) {
-  const [routeCoords, setRouteCoords] = useState([]);
-
-  function handleMapClick(newPoint) {
-    setPoints((prev) => {
-      const next = [...prev];
-      if (activePoint === "origin") {
-        next[0] = newPoint;
-      } else {
-        next[1] = newPoint;
-      }
-      return next;
-    });
-
-    /*if (activePoint === "origin") setActivePoint("destination");
-    else setActivePoint("origin");*/
-  }
-
+  // 🗺 ROUTING (OSRM)
   useEffect(() => {
     if (!points[0] || !points[1]) {
       setRouteCoords([]);
@@ -89,6 +124,7 @@ export default function MapView({
     }
 
     const [a, b] = points;
+
     const url =
       `https://router.project-osrm.org/route/v1/${mode}/` +
       `${a[1]},${a[0]};${b[1]},${b[0]}` +
@@ -102,13 +138,13 @@ export default function MapView({
 
         setRouteCoords(coords);
 
-        // ⚠️ reducem punctele ca să nu rupem API-ul
         const sampled = coords.filter((_, i) => i % 10 === 0);
 
         const elevations = await fetchElevation(sampled);
         const elevationStats = calculateElevationStats(elevations);
 
-      onRouteData({
+        // ✅ STABLE elevation (NO random, NO broken UI)
+        onRouteData({
           distance: route.distance,
             duration: estimateDuration(route.distance, mode),
           ...elevationStats,
@@ -117,6 +153,28 @@ export default function MapView({
       })
       .catch(console.error);
   }, [points, mode]);
+
+  // 🌍 REVERSE GEOCODING
+  useEffect(() => {
+    async function updateNames() {
+      const names = [null, null];
+
+      if (points[0]) {
+        await sleep(200);
+        names[0] = await fetchPlaceName(points[0]);
+      }
+
+      if (points[1]) {
+        await sleep(200);
+        names[1] = await fetchPlaceName(points[1]);
+      }
+
+      setPlaceNames(names);
+      onPlaceNames?.(names);
+    }
+
+    updateNames();
+  }, [points]);
 
   return (
     <MapContainer
