@@ -1,6 +1,6 @@
-# RouteIQ
+# PathIQ
 
-RouteIQ is a route planning application built with React and Leaflet.  
+PathIQ is a route planning application built with React and Leaflet.  
 It allows users to select two points on a map and visualize routes with real-time distance and estimated travel time.
 
 The goal of the project is to provide a simple, interactive way to understand routes in terms of distance, duration, and transport mode.
@@ -61,10 +61,7 @@ src/
 
 ## Future improvements
 
-- Elevation-based route difficulty scoring
 - Current location (GPS) support
-- Route comparison between modes
-- Heatmap for elevation gain
 - Better mobile layout
 
 ---
@@ -75,13 +72,8 @@ This project was built for learning and portfolio purposes.
 
 The idea of route planning with maps, distance calculation, and routing APIs is a common problem domain and may exist in other applications with similar concepts.
 
-RouteIQ is an independent implementation focused on learning geospatial APIs, frontend state management, and interactive UI design.
+PathIQ is an independent implementation focused on learning geospatial APIs, frontend state management, and interactive UI design.
 
----
-
-## Screenshots
-
-*(screenshots here when available)*
 
 ---
 
