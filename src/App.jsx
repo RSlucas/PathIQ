@@ -20,32 +20,68 @@ function fmtDistance(meters) {
 
 function fmtDuration(seconds) {
   const m = Math.floor(seconds / 60);
+
   if (m < 60) return `${m} min`;
+
   const h = Math.floor(m / 60);
   const rem = m % 60;
+
   return `${h}h ${rem}min`;
 }
 
 function buildElevationData(profile) {
-  return profile.map((e, i) => ({ index: i, elevation: e }));
+  return profile.map((e, i) => ({
+    index: i,
+    elevation: e,
+  }));
 }
 
-// Difficulty: 0-100 bazat pe distanta + ascent
 function calcDifficulty(distance, ascent) {
   if (!distance || ascent === undefined) return null;
+
   const km = distance / 1000;
-  const score = Math.min(100, Math.round((km * 2 + ascent * 0.1) / 2));
-  if (score < 25) return { label: "Easy", color: "#22c55e", score };
-  if (score < 55) return { label: "Moderate", color: "#f59e0b", score };
-  if (score < 80) return { label: "Hard", color: "#ef4444", score };
-  return { label: "Very hard", color: "#9333ea", score };
+  const score = Math.min(
+    100,
+    Math.round((km * 2 + ascent * 0.1) / 2)
+  );
+
+  if (score < 25)
+    return {
+      label: "Easy",
+      color: "#22c55e",
+      score,
+    };
+
+  if (score < 55)
+    return {
+      label: "Moderate",
+      color: "#f59e0b",
+      score,
+    };
+
+  if (score < 80)
+    return {
+      label: "Hard",
+      color: "#ef4444",
+      score,
+    };
+
+  return {
+    label: "Very hard",
+    color: "#9333ea",
+    score,
+  };
 }
 
 function readPointsFromURL() {
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(
+    window.location.search
+  );
+
   const a = params.get("a");
   const b = params.get("b");
   const m = params.get("mode");
+
   return {
     points: [
       a ? a.split(",").map(Number) : null,
@@ -59,15 +95,55 @@ function App() {
   const initial = readPointsFromURL();
 
   const [points, setPoints] = useState(initial.points);
+
   const [routeData, setRouteData] = useState(null);
-  const [mode, setMode] = useState(initial.mode || "driving");
-  const [activePoint, setActivePoint] = useState("origin");
-  const [avoidHills, setAvoidHills] = useState(false);
-  const [placeNames, setPlaceNames] = useState([null, null]);
+
+  const [mode, setMode] = useState(
+    initial.mode || "driving"
+  );
+
+  const [activePoint, setActivePoint] =
+    useState("origin");
+
+  const [avoidHills, setAvoidHills] =
+    useState(false);
+
+  const [placeNames, setPlaceNames] = useState([
+    null,
+    null,
+  ]);
+
   const [history, setHistory] = useState([]);
-  const [showAllHistory, setShowAllHistory] = useState(false);
-  const [shareCopied, setShareCopied] = useState(false);
+
+  const [favorites, setFavorites] = useState([]);
+
+  const [showAllHistory, setShowAllHistory] =
+    useState(false);
+
+  const [showHistory, setShowHistory] =
+    useState(false);
+
+  const [shareCopied, setShareCopied] =
+    useState(false);
+
   const [loading, setLoading] = useState(false);
+
+  // SEARCH
+  const [searchOrigin, setSearchOrigin] =
+    useState("");
+
+  const [
+    searchDestination,
+    setSearchDestination,
+  ] = useState("");
+
+  const [originResults, setOriginResults] =
+    useState([]);
+
+  const [
+    destinationResults,
+    setDestinationResults,
+  ] = useState([]);
 
   const modes = [
     { value: "driving", label: "Driving" },
@@ -75,19 +151,87 @@ function App() {
     { value: "bike", label: "Cycling" },
   ];
 
+  // LOAD HISTORY
   useEffect(() => {
     const saved = localStorage.getItem("routes");
+
     if (saved) setHistory(JSON.parse(saved));
   }, []);
 
+  // LOAD FAVORITES
   useEffect(() => {
-    if (!routeData || !points[0] || !points[1]) return;
+    const saved = localStorage.getItem(
+      "favoriteRoutes"
+    );
+
+    if (saved) setFavorites(JSON.parse(saved));
+  }, []);
+
+  // SEARCH ORIGIN
+  useEffect(() => {
+    if (searchOrigin.length < 3) {
+      setOriginResults([]);
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            searchOrigin
+          )}`
+        );
+
+        const data = await res.json();
+
+        setOriginResults(data.slice(0, 5));
+      } catch (err) {
+        console.error(err);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [searchOrigin]);
+
+  // SEARCH DESTINATION
+  useEffect(() => {
+    if (searchDestination.length < 3) {
+      setDestinationResults([]);
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            searchDestination
+          )}`
+        );
+
+        const data = await res.json();
+
+        setDestinationResults(data.slice(0, 5));
+      } catch (err) {
+        console.error(err);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [searchDestination]);
+
+  // SAVE HISTORY
+  useEffect(() => {
+    if (!routeData || !points[0] || !points[1])
+      return;
 
     const exists = history.some(
       (h) =>
-        JSON.stringify(h.from) === JSON.stringify(points[0]) &&
-        JSON.stringify(h.to) === JSON.stringify(points[1])
+        JSON.stringify(h.from) ===
+          JSON.stringify(points[0]) &&
+        JSON.stringify(h.to) ===
+          JSON.stringify(points[1])
     );
+
     if (exists) return;
 
     const newRoute = {
@@ -101,9 +245,17 @@ function App() {
       duration: routeData.duration,
     };
 
-    const updated = [newRoute, ...history].slice(0, 10);
+    const updated = [newRoute, ...history].slice(
+      0,
+      10
+    );
+
     setHistory(updated);
-    localStorage.setItem("routes", JSON.stringify(updated));
+
+    localStorage.setItem(
+      "routes",
+      JSON.stringify(updated)
+    );
   }, [routeData]);
 
   function loadRoute(route) {
@@ -111,144 +263,241 @@ function App() {
     setMode(route.mode);
   }
 
-  function handleReset() {
-    setPoints([null, null]);
-    setRouteData(null);
-    setPlaceNames([null, null]);
-    setActivePoint("origin");
-    window.history.replaceState({}, "", window.location.pathname);
-  }
+  function handleFavorite() {
+    if (!routeData) return;
 
-  function handleSwap() {
-    setPoints([points[1], points[0]]);
-    setPlaceNames([placeNames[1], placeNames[0]]);
-  }
-
-  function handleShare() {
-    if (!points[0] || !points[1]) return;
-    const params = new URLSearchParams({
-      a: points[0].join(","),
-      b: points[1].join(","),
+    const route = {
+      id: Date.now(),
+      from: points[0],
+      to: points[1],
+      fromName: placeNames[0],
+      toName: placeNames[1],
       mode,
-    });
-    const url = `${window.location.origin}${window.location.pathname}?${params}`;
-    navigator.clipboard.writeText(url).then(() => {
-      setShareCopied(true);
-      setTimeout(() => setShareCopied(false), 2000);
-    });
+      distance: routeData.distance,
+    };
+
+    const updated = [route, ...favorites];
+
+    setFavorites(updated);
+
+    localStorage.setItem(
+      "favoriteRoutes",
+      JSON.stringify(updated)
+    );
   }
 
-  function handleGPX() {
-    if (!routeData?.routeCoords) return;
-    const coords = routeData.routeCoords;
+  const visibleHistory = showAllHistory
+    ? history
+    : history.slice(0, 3);
 
-    const trkpts = coords
-      .map(([lat, lng]) => `    <trkpt lat="${lat}" lon="${lng}"></trkpt>`)
-      .join("\n");
+  const hasRoute =
+    routeData && points[0] && points[1];
 
-    const gpx = `<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="RouteIQ">
-  <trk>
-    <name>RouteIQ Export</name>
-    <trkseg>
-${trkpts}
-    </trkseg>
-  </trk>
-</gpx>`;
-
-    const blob = new Blob([gpx], { type: "application/gpx+xml" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "routeiq.gpx";
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  const visibleHistory = showAllHistory ? history : history.slice(0, 3);
-  const hasRoute = routeData && points[0] && points[1];
-  const hasAnyPoint = points[0] || points[1];
-  const hasBothPoints = points[0] && points[1];
   const difficulty = routeData
-    ? calcDifficulty(routeData.distance, routeData.ascent)
+    ? calcDifficulty(
+        routeData.distance,
+        routeData.ascent
+      )
     : null;
 
   return (
     <div className="app-layout">
       <aside className="sidebar">
-
         <div className="sidebar-header">
-          <span className="logo-mark">R</span>
+          <span className="logo-mark">P</span>
+
           <div>
-            <h1 className="app-title">RouteIQ</h1>
-            <p className="app-sub">Elevation-aware route planner</p>
+            <h1 className="app-title">PathIQ</h1>
+
+            <p className="app-sub">
+              Explore routes intelligently
+            </p>
           </div>
         </div>
 
-        {/* Points */}
+        {/* ORIGIN + DESTINATION */}
         <div className="sidebar-section">
           <div className="point-row">
+            {/* ORIGIN */}
             <div className="point-block">
               <div className="point-header">
-                <label className="point-label">Origin</label>
+                <label className="point-label">
+                  Origin
+                </label>
+
                 <button
-                  className={`set-btn ${activePoint === "origin" ? "active" : ""}`}
-                  onClick={() => setActivePoint("origin")}
+                  className={`set-btn ${
+                    activePoint === "origin"
+                      ? "active"
+                      : ""
+                  }`}
+                  onClick={() =>
+                    setActivePoint("origin")
+                  }
                 >
                   SET
                 </button>
               </div>
-              <div className={`point-display ${points[0] ? "set" : ""}`}>
-                {placeNames[0] || (points[0] ? fmt(points[0]) : "Not set")}
-              </div>
-            </div>
 
-            {/* Swap button între cele două puncte */}
-            <div className="point-connector-row">
-              <div className="point-connector" />
-              {hasBothPoints && (
-                <button
-                  className="swap-btn"
-                  onClick={handleSwap}
-                  title="Swap origin and destination"
-                >
-                  ⇅
-                </button>
+              <div
+                className={`point-display ${
+                  points[0] ? "set" : ""
+                }`}
+              >
+                {placeNames[0] ||
+                  (points[0]
+                    ? fmt(points[0])
+                    : "Not set")}
+              </div>
+
+              <input
+                className="search-input"
+                placeholder="Search origin..."
+                value={searchOrigin}
+                onChange={(e) =>
+                  setSearchOrigin(e.target.value)
+                }
+              />
+
+              {originResults.length > 0 && (
+                <div className="search-results">
+                  {originResults.map((r) => (
+                    <button
+                      key={r.place_id}
+                      className="search-result-item"
+                      onClick={() => {
+                        setPoints((prev) => [
+                          [
+                            parseFloat(r.lat),
+                            parseFloat(r.lon),
+                          ],
+                          prev[1],
+                        ]);
+
+                        setPlaceNames((prev) => [
+                          r.display_name,
+                          prev[1],
+                        ]);
+
+                        setSearchOrigin("");
+                        setOriginResults([]);
+                      }}
+                    >
+                      {r.display_name}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
 
-            <div className="point-block">
+            {/* DESTINATION */}
+            <div
+              className="point-block"
+              style={{ marginTop: 16 }}
+            >
               <div className="point-header">
-                <label className="point-label">Destination</label>
+                <label className="point-label">
+                  Destination
+                </label>
+
                 <button
-                  className={`set-btn ${activePoint === "destination" ? "active" : ""}`}
-                  onClick={() => setActivePoint("destination")}
+                  className={`set-btn ${
+                    activePoint ===
+                    "destination"
+                      ? "active"
+                      : ""
+                  }`}
+                  onClick={() =>
+                    setActivePoint(
+                      "destination"
+                    )
+                  }
                 >
                   SET
                 </button>
               </div>
-              <div className={`point-display ${points[1] ? "set" : ""}`}>
-                {placeNames[1] || (points[1] ? fmt(points[1]) : "Not set")}
+
+              <div
+                className={`point-display ${
+                  points[1] ? "set" : ""
+                }`}
+              >
+                {placeNames[1] ||
+                  (points[1]
+                    ? fmt(points[1])
+                    : "Not set")}
               </div>
+
+              <input
+                className="search-input"
+                placeholder="Search destination..."
+                value={searchDestination}
+                onChange={(e) =>
+                  setSearchDestination(
+                    e.target.value
+                  )
+                }
+              />
+
+              {destinationResults.length > 0 && (
+                <div className="search-results">
+                  {destinationResults.map((r) => (
+                    <button
+                      key={r.place_id}
+                      className="search-result-item"
+                      onClick={() => {
+                        setPoints((prev) => [
+                          prev[0],
+                          [
+                            parseFloat(r.lat),
+                            parseFloat(r.lon),
+                          ],
+                        ]);
+
+                        setPlaceNames((prev) => [
+                          prev[0],
+                          r.display_name,
+                        ]);
+
+                        setSearchDestination(
+                          ""
+                        );
+
+                        setDestinationResults(
+                          []
+                        );
+                      }}
+                    >
+                      {r.display_name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-
-          {hasAnyPoint && (
-            <button className="reset-btn" onClick={handleReset}>
-              Clear route
-            </button>
-          )}
         </div>
 
-        {/* Mode + Avoid hills */}
+        {/* MODE */}
         <div className="sidebar-section">
-          <label className="point-label">Travel mode</label>
-          <div className="mode-tabs" style={{ marginTop: 8 }}>
+          <label className="point-label">
+            Travel mode
+          </label>
+
+          <div
+            className="mode-tabs"
+            style={{ marginTop: 8 }}
+          >
             {modes.map((m) => (
               <button
                 key={m.value}
-                className={`mode-tab ${mode === m.value ? "active" : ""}`}
-                onClick={() => setMode(m.value)}
+                className={`mode-tab ${
+                  mode === m.value
+                    ? "active"
+                    : ""
+                }`}
+                onClick={() =>
+                  setMode(m.value)
+                }
               >
                 {m.label}
               </button>
@@ -256,105 +505,98 @@ ${trkpts}
           </div>
 
           <button
-            className={`avoid-hills-btn ${avoidHills ? "active" : ""}`}
-            onClick={() => setAvoidHills((v) => !v)}
-            style={{ marginTop: 10 }}
-            disabled={mode === "driving"}
-            title={
-              mode === "driving"
-                ? "Only available for walking and cycling"
-                : ""
+            className={`avoid-hills-btn ${
+              avoidHills ? "active" : ""
+            }`}
+            onClick={() =>
+              setAvoidHills((v) => !v)
             }
+            style={{ marginTop: 10 }}
           >
-            {avoidHills ? "Avoiding hills" : "Avoid hills"}
+            {avoidHills
+              ? "Avoiding hills"
+              : "Avoid hills"}
           </button>
         </div>
 
-        {/* Loading state */}
-        {loading && (
-          <div className="sidebar-section">
-            <div className="loading-row">
-              <span className="loading-dot" />
-              <span className="loading-text">Calculating route...</span>
-            </div>
-          </div>
-        )}
-
-        {/* Stats + difficulty + elevation */}
+        {/* STATS */}
         {routeData && !loading && (
           <div className="sidebar-section">
-
             <div className="route-stats">
               <div className="stat">
                 <span className="stat-value">
-                  {fmtDistance(routeData.distance)}
+                  {fmtDistance(
+                    routeData.distance
+                  )}
                 </span>
-                <span className="stat-label">Distance</span>
+
+                <span className="stat-label">
+                  Distance
+                </span>
               </div>
+
               <div className="stat-divider" />
+
               <div className="stat">
                 <span className="stat-value">
-                  {fmtDuration(routeData.duration)}
+                  {fmtDuration(
+                    routeData.duration
+                  )}
                 </span>
-                <span className="stat-label">Time</span>
+
+                <span className="stat-label">
+                  Time
+                </span>
               </div>
             </div>
 
-            {routeData.ascent !== undefined && (
+            {difficulty && (
               <div className="elevation-stats">
                 <div className="elev-item">
-                  <span className="elev-value">+{routeData.ascent}m</span>
-                  <span className="elev-label">Ascent</span>
+                  <span
+                    className="difficulty-badge"
+                    style={{
+                      background:
+                        difficulty.color + "22",
+                      color: difficulty.color,
+                      borderColor:
+                        difficulty.color + "55",
+                    }}
+                  >
+                    {difficulty.label}
+                  </span>
+
+                  <span className="elev-label">
+                    Difficulty
+                  </span>
                 </div>
-                <div className="elev-item">
-                  <span className="elev-value">-{routeData.descent}m</span>
-                  <span className="elev-label">Descent</span>
-                </div>
-                {difficulty && (
-                  <div className="elev-item" style={{ marginLeft: "auto" }}>
-                    <span
-                      className="difficulty-badge"
-                      style={{
-                        background: difficulty.color + "22",
-                        color: difficulty.color,
-                        borderColor: difficulty.color + "55",
-                      }}
-                    >
-                      {difficulty.label}
-                    </span>
-                    <span className="elev-label">Difficulty</span>
-                  </div>
-                )}
               </div>
             )}
 
             {routeData.elevationProfile && (
               <div className="elevation-chart">
-                <p className="chart-label">Elevation profile</p>
-                <ResponsiveContainer width="100%" height={110}>
+                <p className="chart-label">
+                  Elevation profile
+                </p>
+
+                <ResponsiveContainer
+                  width="100%"
+                  height={110}
+                >
                   <LineChart
-                    data={buildElevationData(routeData.elevationProfile)}
-                    margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
+                    data={buildElevationData(
+                      routeData.elevationProfile
+                    )}
                   >
-                    <XAxis dataKey="index" hide />
-                    <YAxis
-                      width={36}
-                      tick={{ fill: "#7a7f9a", fontSize: 10 }}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(v) => `${v}m`}
-                      domain={["auto", "auto"]}
+                    <XAxis
+                      dataKey="index"
+                      hide
                     />
-                    <Tooltip
-                      content={({ active, payload }) => {
-                        if (!active || !payload?.length) return null;
-                        return (
-                          <div className="chart-tooltip">
-                            {Math.round(payload[0].value)}m
-                          </div>
-                        );
-                      }}
-                    />
+
+                    <YAxis hide />
+
+                    <Tooltip />
+
                     <Line
                       type="monotone"
                       dataKey="elevation"
@@ -369,52 +611,116 @@ ${trkpts}
           </div>
         )}
 
-        {/* Export + Share */}
-        {hasRoute && !loading && (
+        {/* FAVORITE BUTTON */}
+        {hasRoute && (
           <div className="sidebar-section">
-            <label className="point-label">Export & share</label>
-            <div className="export-row" style={{ marginTop: 10 }}>
-              <button className="export-btn" onClick={handleShare}>
-                {shareCopied ? "Link copied!" : "Copy share link"}
-              </button>
-              <button className="export-btn" onClick={handleGPX}>
-                Download GPX
-              </button>
-            </div>
+            <button
+              className="export-btn"
+              onClick={handleFavorite}
+            >
+              Save favorite
+            </button>
           </div>
         )}
 
-        {/* History */}
-        {history.length > 0 && (
+        {/* FAVORITES */}
+        {favorites.length > 0 && (
           <div className="sidebar-section">
-            <label className="point-label">Recent routes</label>
+            <label className="point-label">
+              Favorites
+            </label>
+
             <div className="history-list">
-              {visibleHistory.map((r) => (
+              {favorites.map((r) => (
                 <button
                   key={r.id}
-                  onClick={() => loadRoute(r)}
+                  onClick={() =>
+                    loadRoute(r)
+                  }
                   className="history-item"
                 >
                   <span className="history-names">
-                    {r.fromName || "Start"} → {r.toName || "End"}
+                    {r.fromName} →{" "}
+                    {r.toName}
                   </span>
+
                   <span className="history-meta">
-                    {fmtDistance(r.distance)} · {r.mode}
+                    {fmtDistance(r.distance)} ·{" "}
+                    {r.mode}
                   </span>
                 </button>
               ))}
             </div>
-            {history.length > 3 && (
-              <button
-                className="show-more-btn"
-                onClick={() => setShowAllHistory((v) => !v)}
-              >
-                {showAllHistory ? "Show less" : `Show all (${history.length})`}
-              </button>
-            )}
           </div>
         )}
 
+        {/* HISTORY */}
+        {history.length > 0 && (
+          <div className="sidebar-section">
+            <button
+              className="show-more-btn"
+              onClick={() =>
+                setShowHistory((v) => !v)
+              }
+            >
+              {showHistory
+                ? "Hide recent routes"
+                : `Show recent routes (${history.length})`}
+            </button>
+
+            {showHistory && (
+              <>
+                <div
+                  className="history-list"
+                  style={{ marginTop: 12 }}
+                >
+                  {visibleHistory.map((r) => (
+                    <button
+                      key={r.id}
+                      onClick={() =>
+                        loadRoute(r)
+                      }
+                      className="history-item"
+                    >
+                      <span className="history-names">
+                        {r.fromName ||
+                          "Start"}{" "}
+                        →{" "}
+                        {r.toName ||
+                          "End"}
+                      </span>
+
+                      <span className="history-meta">
+                        {fmtDistance(
+                          r.distance
+                        )}{" "}
+                        · {r.mode}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                {history.length > 3 && (
+                  <button
+                    className="show-more-btn"
+                    onClick={() =>
+                      setShowAllHistory(
+                        (v) => !v
+                      )
+                    }
+                    style={{
+                      marginTop: 10,
+                    }}
+                  >
+                    {showAllHistory
+                      ? "Show less"
+                      : `Show all (${history.length})`}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </aside>
 
       <main className="map-area">
