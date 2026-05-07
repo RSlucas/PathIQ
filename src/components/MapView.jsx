@@ -225,7 +225,11 @@ export default function MapView({
 
     const [a, b] = points;
     const profile =
-      mode === "bike" ? "bike" : mode === "foot" ? "foot" : "driving";
+  mode === "bike"
+    ? "cycling"
+    : mode === "foot"
+    ? "walking"
+    : "driving";
     const extras = avoidHills ? "&exclude=motorway,ferry" : "";
 
     const url =
