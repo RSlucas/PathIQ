@@ -5,9 +5,6 @@ It allows users to select two points on a map and visualize routes with real-tim
 
 The goal of the project is to provide a simple, interactive way to understand routes in terms of distance, duration, and transport mode.
 
-[pathiq.com](path-iq-eight.vercel.app)
-
-
 ---
 
 ![PathIQ preview](./preview_path11.png)
