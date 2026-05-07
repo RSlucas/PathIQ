@@ -29,7 +29,6 @@ html, body, #root {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Layout */
 .app-layout {
   display: flex;
   height: 100vh;
@@ -37,7 +36,7 @@ html, body, #root {
   overflow: hidden;
 }
 
-/* Sidebar */
+/* ─── Sidebar ────────────────────────────────────── */
 .sidebar {
   width: 350px;
   min-width: 280px;
@@ -89,11 +88,11 @@ html, body, #root {
   border-bottom: 1px solid var(--border);
 }
 
-/* Points */
+/* ─── Points ─────────────────────────────────────── */
 .point-row {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
 }
 
 .point-block {
@@ -101,11 +100,43 @@ html, body, #root {
   flex-direction: column;
 }
 
+.point-connector-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
 .point-connector {
   width: 2px;
-  height: 12px;
+  height: 16px;
   background: var(--border-strong);
   margin-left: 6px;
+  flex-shrink: 0;
+}
+
+.swap-btn {
+  font-family: var(--font);
+  font-size: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+
+.swap-btn:hover {
+  border-color: var(--accent-border);
+  color: var(--accent);
+  background: var(--accent-dim);
 }
 
 .point-header {
@@ -143,45 +174,16 @@ html, body, #root {
   background: var(--accent-dim);
 }
 
-.set-btn {
-  font-family: var(--font);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--border-strong);
-  background: var(--surface-2);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: border-color 0.2s, color 0.2s, background 0.2s;
-}
-
-.set-btn:hover {
-  border-color: var(--accent-border);
-  color: var(--text-primary);
-}
-
-.set-btn.active {
-  border-color: var(--accent-border);
-  background: var(--accent-dim);
-  color: var(--accent);
-}
-
-/* Mode tabs */
-.mode-tabs {
-  display: flex;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.mode-tab {
-  flex: 1;
+/* ─── Butoane baza comuna ────────────────────────── */
+.set-btn,
+.mode-tab,
+.avoid-hills-btn,
+.show-more-btn,
+.export-btn,
+.reset-btn {
   font-family: var(--font);
   font-size: 12px;
   font-weight: 500;
-  padding: 8px 0;
   border-radius: 8px;
   border: 1px solid var(--border-strong);
   background: var(--surface-2);
@@ -190,18 +192,102 @@ html, body, #root {
   transition: border-color 0.2s, color 0.2s, background 0.2s;
 }
 
-.mode-tab:hover {
+.set-btn:hover,
+.mode-tab:hover,
+.avoid-hills-btn:hover,
+.show-more-btn:hover,
+.export-btn:hover {
   border-color: var(--accent-border);
   color: var(--text-primary);
 }
 
-.mode-tab.active {
+.set-btn.active,
+.mode-tab.active,
+.avoid-hills-btn.active {
   border-color: var(--accent-border);
   background: var(--accent-dim);
   color: var(--accent);
 }
 
-/* Stats */
+.set-btn:disabled,
+.avoid-hills-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.set-btn:disabled:hover,
+.avoid-hills-btn:disabled:hover {
+  border-color: var(--border-strong);
+  color: var(--text-secondary);
+  background: var(--surface-2);
+}
+
+.set-btn {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.mode-tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.mode-tab {
+  flex: 1;
+  padding: 8px 0;
+}
+
+.avoid-hills-btn {
+  width: 100%;
+  padding: 8px 0;
+}
+
+.reset-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px 0;
+  border-color: rgba(239, 68, 68, 0.2);
+  color: rgba(239, 68, 68, 0.7);
+}
+
+.reset-btn:hover {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+}
+
+/* ─── Loading sidebar ────────────────────────────── */
+.loading-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.loading-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.loading-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+  animation: pulse 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.75); }
+}
+
+/* ─── Stats ──────────────────────────────────────── */
 .route-stats {
   display: flex;
   align-items: center;
@@ -235,13 +321,129 @@ html, body, #root {
   margin: 0 20px;
 }
 
-.hint-text {
-  font-size: 12px;
-  color: var(--text-secondary);
-  line-height: 1.6;
+/* ─── Elevation ──────────────────────────────────── */
+.elevation-stats {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
 }
 
-/* Map */
+.elev-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.elev-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.elev-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-secondary);
+}
+
+/* ─── Difficulty badge ───────────────────────────── */
+.difficulty-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid;
+  letter-spacing: 0.3px;
+}
+
+/* ─── Elevation chart ────────────────────────────── */
+.elevation-chart {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.chart-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+.chart-tooltip {
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+/* ─── Export ─────────────────────────────────────── */
+.export-row {
+  display: flex;
+  gap: 8px;
+}
+
+.export-btn {
+  flex: 1;
+  padding: 9px 0;
+  text-align: center;
+}
+
+/* ─── History ────────────────────────────────────── */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.history-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  font-family: var(--font);
+}
+
+.history-item:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-dim);
+}
+
+.history-names {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.history-meta {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.show-more-btn {
+  width: 100%;
+  padding: 8px 0;
+  margin-top: 8px;
+}
+
+/* ─── Map ────────────────────────────────────────── */
 .map-area {
   flex: 1;
   position: relative;
@@ -252,4 +454,103 @@ html, body, #root {
 .leaflet-container {
   width: 100% !important;
   height: 100% !important;
+}
+
+/* ─── Map loading overlay ────────────────────────── */
+.map-loading-overlay {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.map-loading-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(26, 29, 39, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--text-primary);
+  font-family: var(--font);
+  white-space: nowrap;
+}
+
+/* ─── Legenda pe hartă ───────────────────────────── */
+.map-legend {
+  position: absolute;
+  bottom: 32px;
+  right: 12px;
+  z-index: 1000;
+  background: rgba(26, 29, 39, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 120px;
+  pointer-events: all;
+}
+
+.legend-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  gap: 16px;
+  font-family: var(--font);
+}
+
+.legend-toggle:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.legend-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-secondary);
+}
+
+.legend-toggle-icon {
+  font-size: 16px;
+  color: var(--text-secondary);
+  line-height: 1;
+  font-weight: 300;
+}
+
+.legend-items {
+  padding: 4px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-dot {
+  width: 20px;
+  height: 4px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.legend-label {
+  font-size: 12px;
+  color: var(--text-primary);
+  font-family: var(--font);
 }
