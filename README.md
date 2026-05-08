@@ -7,6 +7,16 @@ The goal of the project is to provide a simple, interactive way to understand ro
 
 ---
 
+![PathIQ preview](./preview_path11.png)
+
+---
+
+
+- _site URL_:  `path-iq-eight.vercel.app`
+
+---
+
+
 ## Features
 
 - Interactive map using Leaflet
