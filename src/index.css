@@ -598,3 +598,68 @@ html, body, #root {
   border-color: var(--accent-border);
   background: var(--accent-dim);
 }
+
+/*MOBILE*/
+
+@media (max-width: 768px) {
+  .app-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+    max-height: 48vh;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .map-area {
+    height: 52vh;
+  }
+
+  .sidebar-header {
+    padding: 18px 16px;
+  }
+
+  .sidebar-section {
+    padding: 16px;
+  }
+
+  .route-stats {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .stat-divider {
+    display: none;
+  }
+
+  .mode-tabs {
+    flex-wrap: wrap;
+  }
+
+  .mode-tab {
+    min-width: 90px;
+  }
+
+  .map-legend {
+    bottom: 14px;
+    right: 10px;
+    transform: scale(0.92);
+    transform-origin: bottom right;
+  }
+
+  .history-names {
+    font-size: 12px;
+  }
+
+  .history-meta {
+    font-size: 10px;
+  }
+
+  .search-result-item {
+    font-size: 11px;
+  }
+}
